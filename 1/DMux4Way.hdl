@@ -14,5 +14,15 @@ CHIP DMux4Way {
     OUT a, b, c, d;
 
     PARTS:
-    //// Replace this comment with your code.
+    DMux(in=in, sel=sel[1], a=aOut, b=bOut);
+    // if (left bit == 1) aOut, indicates the output should be in a or b
+    // else bOut, indicates output should be in c or d
+
+    DMux(in=aOut, sel=sel[0], a=a, b=b);
+    // if aOut, then select between a and b to output
+    // else no effect
+
+    DMux(in=bOut, sel=sel[0], a=c, b=d);
+    // if bOut, then select between c and d
+    // else no effect
 }
