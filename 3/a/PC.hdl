@@ -14,5 +14,17 @@ CHIP PC {
     OUT out[16];
     
     PARTS:
-    //// Replace this comment with your code.
+    // get the incremented value
+    Inc16(in=currentValue, out=incValue);
+
+    // inc first, cuz its the last else if
+    Mux16(a=currentValue, b=incValue, sel=inc, out=temp1);
+
+    // load next
+    Mux16(a=temp1, b=in, sel=load, out=temp2);
+
+    // reset last
+    Mux16(a=temp2, b=false, sel=reset, out=result);
+
+    Register(in=result, load=true, out=out, out=currentValue);
 }
