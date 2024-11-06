@@ -13,5 +13,10 @@ CHIP Bit {
     OUT out;
 
     PARTS:
-    //// Replace this comment with your code.
+    // currentValue is persisted by the clock
+    Mux(a=currentValue, b=in, sel=load, out=muxOut);
+
+    // if load, store currentValue and out (next cycle) to in
+    // else currentValue and out are both currentValue
+    DFF(in=muxOut, out=out, out=currentValue);
 }
