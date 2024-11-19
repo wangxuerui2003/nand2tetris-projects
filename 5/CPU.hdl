@@ -32,5 +32,45 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-	//// Replace this comment with your code.
+    // check if is A-instruction or C-instruction
+    Not(in=instruction[15], out=Ainstruction);
+    Not(in=Ainstruction, out=Cinstruction);
+
+    // if is A-instruction or C-instruction dest A register
+    And(a=Cinstruction, b=instruction[5], out=ALUtoAreg);
+    Mux16(a=instruction, b=ALUout, sel=ALUtoAreg, out=AregIn);
+    Or(a=Ainstruction, b=ALUtoAreg, out=loadA);
+    ARegister(in=AregIn, load=loadA, out=Aout);
+
+    // C-instruction related code, use Aout from the previous cycle as input if necessary
+    // select if the C-instruction is using Aregister value or inM
+    Mux16(a=Aout, b=inM, sel=instruction[12], out=yIn);
+
+    And(a=Cinstruction, b=instruction[4], out=loadD);
+    DRegister(in=ALUout, load=loadD, out=Dout);
+
+    ALU(x=Dout, y=yIn, zx=instruction[11], nx=instruction[10],
+        zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6],
+        out=ALUout, zr=ZRout, ng=NGout);
+    
+    // set outM and addressM
+    Or16(a=false, b=Aout, out[0..14]=addressM);
+    Or16(a=false, b=ALUout, out=outM);
+    And(a=Cinstruction, b=instruction[3], out=writeM);
+
+    // update PC
+    // if ZRout and instruction[1] (all jumps related to equal 0), jump
+    And(a=ZRout, b=instruction[1], out=jeq);
+    // if NGout and instruction[2] (all jumps related to less than 0), jump
+    And(a=NGout, b=instruction[2], out=jlt);
+    // if gt and instruction[0] (all jumps related to greater than 0), jump
+    Or(a=ZRout, b=NGout, out=le);
+    Not(in=le, out=gt);
+    And(a=gt, b=instruction[0], out=jgt);
+    // see if need jump, and update PC
+    Or(a=jeq, b=jlt, out=jle);
+    Or(a=jle, b=jgt, out=jumpToA);
+    And(a=Cinstruction, b=jumpToA, out=jump);
+    Not(in=jump, out=increment);
+    PC(in=Aout, load=jump, inc=increment, reset=reset, out[0..14]=pc);
 }
