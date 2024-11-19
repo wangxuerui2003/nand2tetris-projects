@@ -25,5 +25,15 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-	//// Replace this comment with your code.
+	// select if the address is Data RAM, Screen, or Keyboard
+    // 2^14 is 16K, means if address[14] is 0, the address is in Data RAM.
+    // if address[14] is 1 and address[13] is 0, the address is Screen.
+    // if address[14] and address[13] are 1, the address is Keyboard.
+
+    DMux4Way(in=load, sel=address[13..14], a=loadRam1, b=loadRam2, c=loadScreen, d=loadKbd);
+    Or(a=loadRam1, b=loadRam2, out=loadRam);
+    RAM16K(in=in, load=loadRam, address=address[0..13], out=ramOut);
+    Screen(in=in, load=loadScreen, address=address[0..12], out=screenOut);
+    Keyboard(out=kbdOut);
+    Mux4Way16(a=ramOut, b=ramOut, c=screenOut, d=kbdOut, sel=address[13..14], out=out);
 }
